@@ -1,31 +1,37 @@
+'use client';
 
-import { useEffect } from "react";
-import { createPortal } from "react-dom";
-import css from "./Modal.module.css";
+import { useEffect, useState } from 'react';
+import { createPortal } from 'react-dom';
+import css from './Modal.module.css';
 
 interface ModalProps {
   children: React.ReactNode;
   onClose: () => void;
 }
 
-const modalRoot = document.getElementById("modal-root");
-if (!modalRoot) {
-  const div = document.createElement("div");
-  div.id = "modal-root";
-  document.body.appendChild(div);
-}
+export default function Modal({ children, onClose }: ModalProps) {
+  const [modalRoot, setModalRoot] = useState<HTMLElement | null>(null);
 
-export default function Modal ({ children, onClose }:ModalProps) {
   useEffect(() => {
+    // Логіка створення modal-root виконується тільки в useEffect
+    // Це гарантує, що код спрацює лише в браузері.
+    let root = document.getElementById('modal-root');
+    if (!root) {
+      root = document.createElement('div');
+      root.id = 'modal-root';
+      document.body.appendChild(root);
+    }
+    setModalRoot(root);
+
     const handleKeyDown = (e: KeyboardEvent) => {
-      if (e.key === "Escape") {
+      if (e.key === 'Escape') {
         onClose();
       }
     };
 
-    window.addEventListener("keydown", handleKeyDown);
+    window.addEventListener('keydown', handleKeyDown);
     return () => {
-      window.removeEventListener("keydown", handleKeyDown);
+      window.removeEventListener('keydown', handleKeyDown);
     };
   }, [onClose]);
 
@@ -34,6 +40,11 @@ export default function Modal ({ children, onClose }:ModalProps) {
       onClose();
     }
   };
+
+  // Рендеримо портал тільки якщо modalRoot існує
+  if (!modalRoot) {
+    return null;
+  }
 
   return createPortal(
     <div
@@ -44,7 +55,6 @@ export default function Modal ({ children, onClose }:ModalProps) {
     >
       <div className={css.modal}>{children}</div>
     </div>,
-    document.getElementById("modal-root")!
+    modalRoot,
   );
-};
-
+}
