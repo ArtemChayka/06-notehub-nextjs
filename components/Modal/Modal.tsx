@@ -13,8 +13,7 @@ export default function Modal({ children, onClose }: ModalProps) {
   const [modalRoot, setModalRoot] = useState<HTMLElement | null>(null);
 
   useEffect(() => {
-    // Логіка створення modal-root виконується тільки в useEffect
-    // Це гарантує, що код спрацює лише в браузері.
+   
     let root = document.getElementById('modal-root');
     if (!root) {
       root = document.createElement('div');
@@ -41,7 +40,6 @@ export default function Modal({ children, onClose }: ModalProps) {
     }
   };
 
-  // Рендеримо портал тільки якщо modalRoot існує
   if (!modalRoot) {
     return null;
   }

@@ -16,7 +16,7 @@ export default function NoteForm({ onCancel }: NoteFormProps) {
     mutationFn: createNote,
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["notes"] });
-      onCancel(); // Закриваємо модал після успішного створення
+      onCancel(); 
     },
     onError: (error) => {
       console.error("Error creating note:", error);
