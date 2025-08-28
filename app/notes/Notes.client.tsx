@@ -1,6 +1,6 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { useQuery } from '@tanstack/react-query';
 import NoteList from '@/components/NoteList/NoteList';
 import SearchBox from '@/components/SearchBox/SearchBox';
@@ -10,14 +10,34 @@ import Pagination from '@/components/Pagination/Pagination';
 import { fetchNotes } from '@/lib/api';
 import css from './Notes.module.css';
 
+function useDebounce<T>(value: T, delay: number): T {
+  const [debouncedValue, setDebouncedValue] = useState<T>(value);
+
+  useEffect(() => {
+    const handler = setTimeout(() => {
+      setDebouncedValue(value);
+    }, delay);
+
+    return () => {
+      clearTimeout(handler);
+    };
+  }, [value, delay]);
+
+  return debouncedValue;
+}
+
 export default function NotesClient() {
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [currentPage, setCurrentPage] = useState(1);
   const [searchQuery, setSearchQuery] = useState('');
 
-  const { data, isLoading, error } = useQuery({
-    queryKey: ['notes', { page: currentPage, search: searchQuery }],
-    queryFn: () => fetchNotes({ page: currentPage, search: searchQuery }),
+  const debouncedSearchQuery = useDebounce(searchQuery, 500); 
+
+  const { data, isLoading, isFetching, error } = useQuery({
+    queryKey: ['notes', { page: currentPage, search: debouncedSearchQuery }],
+    queryFn: () =>
+      fetchNotes({ page: currentPage, search: debouncedSearchQuery }),
+    placeholderData: (previousData) => previousData, 
   });
 
   const handlePageChange = (selectedItem: { selected: number }) => {
@@ -37,6 +57,8 @@ export default function NotesClient() {
     return <p>Could not fetch the list of notes. {error.message}</p>;
   }
 
+  const isDataFetching = isFetching;
+
   return (
     <div className={css.container}>
       <div className={css.toolbar}>
@@ -45,6 +67,10 @@ export default function NotesClient() {
           Create note
         </button>
       </div>
+      {isDataFetching && (
+        <p className={css.loadingText}>Fetching new notes...</p>
+      )}
+
       {data?.notes && data.notes.length > 0 ? (
         <>
           <NoteList notes={data.notes} />
